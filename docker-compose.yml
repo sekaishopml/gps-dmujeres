@@ -55,7 +55,7 @@ services:
     volumes:
       - ./traccar/traccar.xml:/opt/traccar/conf/traccar.xml:ro
       - ./traccar/logs:/opt/traccar/logs
-      - ./traccar/l10n/es-CumN_0FF.js:/opt/traccar/web/assets/es-CumN_0FF.js:ro  # Terminología de personal
+      - ./traccar/l10n/es-CumN_0FF.js:/opt/traccar/web/assets/es-CumN_0FF.js:ro
       - ./traccar/MapRoutePoints-CUx_dHeJ.js:/opt/traccar/web/assets/MapRoutePoints-CUx_dHeJ.js:ro
       - ./traccar/IconButton-oialqkv3.js:/opt/traccar/web/assets/IconButton-oialqkv3.js:ro
       - ./traccar/MapRoutePath-DaJlD9QK.js:/opt/traccar/web/assets/MapRoutePath-DaJlD9QK.js:ro
@@ -135,8 +135,31 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # ========== Redis ==========
+  redis:
+    image: redis:7-alpine
+    container_name: dmt-redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redisdata:/data
+    command: redis-server --appendonly yes --save 60 1
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   pgdata:
+    driver: local
+  redisdata:
     driver: local
   certbot_www:
     driver: local
