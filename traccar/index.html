@@ -63,7 +63,7 @@
       console.warn("[RouteWorker] Worker not available:", e.message);
     }
 
-    // Interceptar fetch para /api/positions y /api/positions/latest
+    // Interceptar fetch para /api/positions y /api/v2/route
     var origFetch = window.fetch;
     window.fetch = function() {
       var url = arguments[0];
@@ -79,9 +79,85 @@
           return response;
         });
       }
+      if (url.indexOf("/api/v2/route/") >= 0) {
+        var sep = url.indexOf("?") >= 0 ? "&" : "?";
+        arguments[0] = url + sep + "fps=10";
+        return origFetch.apply(this, arguments);
+      }
       return origFetch.apply(this, arguments);
     };
   </script>
+
+
+<script>
+// === SMOOTH REPLAY ENGINE ===
+// Cola de posiciones animadas a 60fps para replay fluido como agua
+(function() {
+  var marker = null;
+  var queue = [];
+  var animating = false;
+
+  function init() {
+    if (typeof google === "undefined" || !google.maps) {
+      return setTimeout(init, 500);
+    }
+    overrideMarker();
+    console.log("[SmoothReplay] Motor fluido activado");
+  }
+
+  function overrideMarker() {
+    var orig = google.maps.Marker.prototype.setPosition;
+    if (orig.__smooth) return;
+    google.maps.Marker.prototype.setPosition = function(pos) {
+      marker = this;
+      if (pos && typeof pos.lat === "function") {
+        queue.push({ lat: pos.lat(), lng: pos.lng() });
+        if (!animating) processQueue(orig);
+        return;
+      }
+      return orig.apply(this, arguments);
+    };
+    google.maps.Marker.prototype.setPosition.__smooth = true;
+  }
+
+  function processQueue(origSetPos) {
+    if (queue.length < 2) {
+      if (queue.length === 1) {
+        var p = queue[0];
+        origSetPos.call(marker, new google.maps.LatLng(p.lat, p.lng));
+      }
+      queue = [];
+      animating = false;
+      return;
+    }
+    animating = true;
+    var from = queue.shift();
+    var to = queue[0];
+    var startTime = performance.now();
+    var duration = Math.max(50, Math.min(1000, (to.time || 500)));
+
+    function animate(now) {
+      var t = Math.min(1, (now - startTime) / duration);
+      var ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      var lat = from.lat + (to.lat - from.lat) * ease;
+      var lng = from.lng + (to.lng - from.lng) * ease;
+      origSetPos.call(marker, new google.maps.LatLng(lat, lng));
+      if (t < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        processQueue(origSetPos);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  if (document.readyState === "complete") {
+    init();
+  } else {
+    window.addEventListener("load", init);
+  }
+})();
+</script>
 
 </body>
 </html>

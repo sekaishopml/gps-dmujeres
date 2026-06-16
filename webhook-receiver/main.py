@@ -321,12 +321,15 @@ async def get_route_compact(
     date: Optional[str] = None,
     from_time: Optional[str] = None,
     to: Optional[str] = None,
+    fps: Optional[int] = None,
 ):
     user = await get_current_user(request)
 
     r = await get_redis()
     if date:
         cache_key = f"route:{device_id}:{date}"
+        if fps:
+            cache_key += f":fps{fps}"
         cached = await r.get(cache_key)
         if cached:
             logger.info("Route cache hit: %s", cache_key)
@@ -338,9 +341,12 @@ async def get_route_compact(
     idx = 2
 
     if date:
-        where.append(f"servertime::date = ${idx}::date")
-        params.append(date)
-        idx += 1
+        from datetime import datetime, timedelta
+        dt = datetime.fromisoformat(date)
+        where.append(f"servertime >= ${idx} AND servertime < ${idx + 1}")
+        params.append(dt)
+        params.append(dt + timedelta(days=1))
+        idx += 2
     if from_time:
         where.append(f"servertime >= ${idx}")
         params.append(from_time)
@@ -360,27 +366,65 @@ async def get_route_compact(
     async with pool.acquire() as conn:
         rows = await conn.fetch(query, *params)
 
-    # Compact format: [[lat, lng, timestamp_iso, speed, course, battery], ...]
     compact = []
     for row in rows:
         attrs = json.loads(row[5]) if row[5] else {}
         compact.append([
-            row[0],  # lat
-            row[1],  # lng
-            row[2].isoformat() if row[2] else None,  # time
-            row[3],  # speed
-            row[4],  # course
-            attrs.get("batteryLevel") or attrs.get("battery") or 0,  # battery
+            row[0],
+            row[1],
+            row[2].isoformat() if row[2] else None,
+            row[3],
+            row[4],
+            attrs.get("batteryLevel") or attrs.get("battery") or 0,
         ])
+
+    interp = fps and fps > 0 and len(compact) > 1
+    if interp:
+        from datetime import datetime, timedelta
+        smooth = []
+        cap = 200000
+        for i in range(len(compact) - 1):
+            p1, p2 = compact[i], compact[i + 1]
+            t1_s = p1[2]
+            t2_s = p2[2]
+            if not t1_s or not t2_s:
+                smooth.append(p1)
+                continue
+            try:
+                t1 = datetime.fromisoformat(t1_s)
+                t2 = datetime.fromisoformat(t2_s)
+            except:
+                smooth.append(p1)
+                continue
+            delta = (t2 - t1).total_seconds()
+            if delta <= 0:
+                smooth.append(p1)
+                continue
+            frames = min(max(1, round(delta * fps)), cap)
+            step = 1.0 / frames
+            for f in range(frames):
+                t = f * step
+                smooth.append([
+                    p1[0] + (p2[0] - p1[0]) * t,
+                    p1[1] + (p2[1] - p1[1]) * t,
+                    (t1 + timedelta(seconds=delta * t)).isoformat(),
+                    p1[3] + (p2[3] - p1[3]) * t,
+                    p1[4] + (p2[4] - p1[4]) * t,
+                    p1[5] + (p2[5] - p1[5]) * t,
+                ])
+                if len(smooth) >= cap:
+                    break
+            if len(smooth) >= cap:
+                break
+        smooth.append(compact[-1])
+        compact = smooth
 
     result = {"deviceId": device_id, "points": compact, "count": len(compact)}
 
-    if date:
+    if date and not interp:
         await r.setex(cache_key, 86400, json.dumps(result, default=str))
 
     return JSONResponse(content=result)
-
-
 # ---- Serve static files ----
 
 @app.get("/route-worker.js")
