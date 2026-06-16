@@ -134,7 +134,7 @@
     var from = queue.shift();
     var to = queue[0];
     var startTime = performance.now();
-    var duration = Math.max(50, Math.min(1000, (to.time || 500)));
+    var duration = 300;
 
     function animate(now) {
       var t = Math.min(1, (now - startTime) / duration);
@@ -151,10 +151,10 @@
     requestAnimationFrame(animate);
   }
 
-  if (document.readyState === "complete") {
+  if (document.readyState === "complete" || document.readyState === "interactive") {
     init();
   } else {
-    window.addEventListener("load", init);
+    document.addEventListener("DOMContentLoaded", init);
   }
 })();
 </script>
