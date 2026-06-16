@@ -1,0 +1,149 @@
+version: "3.9"
+
+services:
+  # ========== PostgreSQL + TimescaleDB ==========
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: dmt-timescaledb
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-dmtracker}
+      POSTGRES_USER: ${POSTGRES_USER:-dmt_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dmt_secure_pass_2026}
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+      TZ: ${TZ:-America/Guayaquil}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/setup-timescaledb-traccar.sql:/docker-entrypoint-initdb.d/01_setup.sql
+    ports:
+      - "127.0.0.1:5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dmt_admin} -d ${POSTGRES_DB:-dmtracker}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_preload_libraries=timescaledb"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "effective_cache_size=768MB"
+      - "-c"
+      - "wal_buffers=4MB"
+      - "-c"
+      - "work_mem=4MB"
+      - "-c"
+      - "random_page_cost=1.1"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ========== Servidor Oficial Traccar ==========
+  traccar:
+    image: traccar/traccar:6.2-alpine
+    container_name: dmt-traccar
+    restart: unless-stopped
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    volumes:
+      - ./traccar/traccar.xml:/opt/traccar/conf/traccar.xml:ro
+      - ./traccar/logs:/opt/traccar/logs
+      - ./traccar/l10n/es-CumN_0FF.js:/opt/traccar/web/assets/es-CumN_0FF.js:ro  # Terminología de personal
+      - ./traccar/MapRoutePoints-CUx_dHeJ.js:/opt/traccar/web/assets/MapRoutePoints-CUx_dHeJ.js:ro
+      - ./traccar/IconButton-oialqkv3.js:/opt/traccar/web/assets/IconButton-oialqkv3.js:ro
+      - ./traccar/MapRoutePath-DaJlD9QK.js:/opt/traccar/web/assets/MapRoutePath-DaJlD9QK.js:ro
+      - ./traccar/ReplayPage-CLJEvY0U.js:/opt/traccar/web/assets/ReplayPage-CLJEvY0U.js:ro
+      - ./traccar/ChartReportPage-B-RkS5Kp.js:/opt/traccar/web/assets/ChartReportPage-B-RkS5Kp.js:ro
+      - ./traccar/MapGeocoder-DZ7GyHA9.js:/opt/traccar/web/assets/MapGeocoder-DZ7GyHA9.js:ro
+      - ./traccar/useMapStyles-BC2Hb88q.js:/opt/traccar/web/assets/useMapStyles-BC2Hb88q.js:ro
+      - ./traccar/index.html:/opt/traccar/web/index.html:ro
+      - ./traccar/traccar-custom.css:/opt/traccar/web/custom.css:ro
+      - ./traccar/MapView-Bhqzv-Oc.js:/opt/traccar/web/assets/MapView-Bhqzv-Oc.js:ro
+      - ./traccar/MapPositions-DtWkadAy.js:/opt/traccar/web/assets/MapPositions-DtWkadAy.js:ro
+      - ./traccar/ecuador.pmtiles:/opt/traccar/web/ecuador.pmtiles:ro
+      - ./traccar/basemaps.js:/opt/traccar/web/basemaps.js:ro
+      - ./traccar/sw.js:/opt/traccar/web/sw.js:ro
+      - ./traccar/LoginPage-DbAu7k9c.js:/opt/traccar/web/assets/LoginPage-DbAu7k9c.js:ro
+      - ./traccar/MainMap-C62m7Ii9.js:/opt/traccar/web/assets/MainMap-C62m7Ii9.js:ro
+    ports:
+      - "5055:5055"
+      - "5055:5055/udp"
+      - "8082:8082"
+    environment:
+      - JAVA_TOOL_OPTIONS=-Xms1g -Xmx4g -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ========== Nginx Proxy Inverso ==========
+  nginx:
+    image: nginx:alpine
+    container_name: dmt-nginx
+    restart: unless-stopped
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d/traccar.conf:/etc/nginx/conf.d/default.conf:ro
+      - certbot_www:/var/www/certbot
+      - certbot_conf:/etc/letsencrypt
+    ports:
+      - "8080:80"
+      - "8443:443"
+    depends_on:
+      - traccar
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ========== Dashboard de Debug y Monitoreo ==========
+  debug-dashboard:
+    build:
+      context: ./debug-dashboard
+      dockerfile: Dockerfile
+    container_name: dmt-debug-dashboard
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8085:8085"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-dmt_admin}:${POSTGRES_PASSWORD:-dmt_prod_secure_2026_change_me}@timescaledb:5432/${POSTGRES_DB:-dmtracker}
+      LOG_FILE_PATH: /opt/traccar/logs/tracker-server.log
+    volumes:
+      - ./traccar/logs:/opt/traccar/logs:ro
+      - ./scripts/simulation/live_simulator.py:/app/live_simulator.py:ro
+      - ./scripts/simulation/simulate_load.py:/app/simulate_load.py:ro
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  pgdata:
+    driver: local
+  certbot_www:
+    driver: local
+  certbot_conf:
+    driver: local
+
+networks:
+  default:
+    name: dmt-network
+    driver: bridge

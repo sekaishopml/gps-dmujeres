@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+    <entry key='config.default'>./conf/default.xml</entry>
+
+    <!-- Base de Datos PostgreSQL -->
+    <entry key='database.driver'>org.postgresql.Driver</entry>
+    <entry key='database.url'>jdbc:postgresql://timescaledb:5432/dmtracker</entry>
+    <entry key='database.user'>dmt_admin</entry>
+    <entry key='database.password'>dmt_prod_secure_2026_change_me</entry>
+
+    <!-- Optimización de memoria y protocolos -->
+    <entry key='protocols.enable'>osmand</entry> <!-- Solo habilitamos OsmAnd para Traccar Client -->
+    
+    <!-- Configuración Web -->
+    <entry key='web.port'>8082</entry>
+    <entry key='web.path'>./web</entry>
+
+    <!-- Atributos por defecto y seguridad -->
+    <entry key='device.limit'>100</entry>
+
+    <!-- ============================================================ -->
+    <!-- Filtros de Ingesta GPS — Reducen ruido y almacenamiento      -->
+    <!-- ============================================================ -->
+    <entry key='filter.enable'>true</entry>
+
+    <!-- Ignorar punto si el dispositivo se movió MENOS de 5 metros  -->
+    <!-- Esto elimina puntos duplicados cuando el personal está quieto -->
+    <entry key='filter.distance'>5</entry>
+
+    <!-- Descartar puntos con velocidad imposible (> 250 km/h)        -->
+    <entry key='filter.maxSpeed'>250</entry>
+
+    <!-- Filtrar señales GPS inválidas (fix inválido del satélite)    -->
+    <entry key='filter.invalid'>true</entry>
+
+    <!-- Descartar si la precisión GPS es peor que 50 metros          -->
+    <entry key='filter.accuracy'>50</entry>
+
+    <!-- Eliminar puntos exactamente duplicados (mismo lugar y hora)   -->
+    <entry key='filter.duplicate'>true</entry>
+
+    <!-- Eliminar coordenadas (0,0) — sin señal GPS                   -->
+    <entry key='filter.zero'>true</entry>
+
+    <!-- Descartar puntos de tiempo futuro o muy antiguos (> 1h)      -->
+    <entry key='filter.future'>600</entry>
+</properties>
+

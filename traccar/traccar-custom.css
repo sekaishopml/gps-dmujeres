@@ -1,0 +1,82 @@
+/* Glassmorphism for maplibre/mapbox controls */
+.maplibregl-ctrl-group, .mapboxgl-ctrl-group {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    overflow: hidden !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.maplibregl-ctrl-group button, .mapboxgl-ctrl-group button {
+    background-color: transparent !important;
+    border: none !important;
+    transition: background-color 0.2s ease, transform 0.1s ease !important;
+}
+
+.maplibregl-ctrl-group button:hover, .mapboxgl-ctrl-group button:hover {
+    background-color: #eb0045 !important;
+}
+.maplibregl-ctrl-group button:hover .maplibregl-ctrl-icon, 
+.mapboxgl-ctrl-group button:hover .mapboxgl-ctrl-icon,
+.maplibregl-ctrl-group button:hover svg,
+.mapboxgl-ctrl-group button:hover svg {
+    filter: invert(1) brightness(10) !important;
+}
+
+.maplibregl-ctrl-group button:active, .mapboxgl-ctrl-group button:active {
+    background-color: #c3003a !important;
+    transform: scale(0.95);
+}
+
+.maplibregl-ctrl-group button + button, .mapboxgl-ctrl-group button + button {
+    border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Attribution styles */
+.maplibregl-ctrl.maplibregl-ctrl-attrib, .mapboxgl-ctrl.mapboxgl-ctrl-attrib {
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 8px !important;
+    padding: 2px 8px !important;
+    margin: 4px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+    font-size: 10px !important;
+}
+
+.maplibregl-ctrl.maplibregl-ctrl-attrib a, .mapboxgl-ctrl.mapboxgl-ctrl-attrib a {
+    color: #0076ff !important;
+    text-decoration: none !important;
+}
+
+.maplibregl-ctrl.maplibregl-ctrl-attrib a:hover, .mapboxgl-ctrl.mapboxgl-ctrl-attrib a:hover {
+    text-decoration: underline !important;
+}
+
+/* Map cursor styling */
+.maplibregl-canvas-container.maplibregl-interactive, .mapboxgl-canvas-container.mapboxgl-interactive {
+    cursor: grab !important;
+}
+
+.maplibregl-canvas-container.maplibregl-interactive:active, .mapboxgl-canvas-container.mapboxgl-interactive:active {
+    cursor: grabbing !important;
+}
+
+/* Fuchsia branding for IconButtons and Sliders */
+.MuiIconButton-root:hover {
+    background-color: rgba(235, 0, 69, 0.08) !important;
+    color: #eb0045 !important;
+}
+.MuiIconButton-root:hover svg {
+    color: #eb0045 !important;
+}
+.MuiIconButton-root:active {
+    background-color: rgba(235, 0, 69, 0.18) !important;
+}
+.MuiSlider-root {
+    color: #eb0045 !important;
+}

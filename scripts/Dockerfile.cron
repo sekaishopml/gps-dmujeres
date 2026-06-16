@@ -1,0 +1,10 @@
+FROM node:20-alpine
+RUN apk add --no-cache tzdata
+WORKDIR /app
+COPY precompute-routes.js .
+RUN npm init -y > /dev/null 2>&1 && npm install pg redis
+
+ENV NODE_ENV=production
+ENV TZ=America/Guayaquil
+
+CMD ["node", "precompute-routes.js"]
