@@ -1,13 +1,17 @@
 {
-  : https://opencode.ai/config.json,
-  mcp: {
-    redis: {
-      type: local,
-      command: [npx, -y, @modelcontextprotocol/server-redis],
-      env: {
-        REDIS_URL: redis://localhost:6379
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "redis": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-redis"
+      ],
+      "env": {
+        "REDIS_URL": "redis://localhost:6379"
       },
-      enabled: true
+      "enabled": true
     }
   }
 }
