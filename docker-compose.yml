@@ -1,4 +1,4 @@
-version: "3.9"
+
 
 services:
   # ========== PostgreSQL + TimescaleDB ==========
@@ -29,13 +29,17 @@ services:
       - "-c"
       - "max_connections=200"
       - "-c"
-      - "shared_buffers=256MB"
+      - "shared_buffers=1GB"
       - "-c"
-      - "effective_cache_size=768MB"
+      - "effective_cache_size=4GB"
       - "-c"
-      - "wal_buffers=4MB"
+      - "wal_buffers=16MB"
       - "-c"
-      - "work_mem=4MB"
+      - "work_mem=16MB"
+      - "-c"
+      - "maintenance_work_mem=256MB"
+      - "-c"
+      - "jit=off"
       - "-c"
       - "random_page_cost=1.1"
     logging:
@@ -75,7 +79,7 @@ services:
     ports:
       - "5055:5055"
       - "5055:5055/udp"
-      - "8082:8082"
+      - "127.0.0.1:8082:8082"
     environment:
       - JAVA_TOOL_OPTIONS=-Xms1g -Xmx4g -XX:+UseG1GC -XX:MaxGCPauseMillis=200
     healthcheck:
@@ -155,6 +159,27 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  # ========== Webhook Receiver (FastAPI) ==========
+  webhook-receiver:
+    build:
+      context: ./webhook-receiver
+      dockerfile: Dockerfile
+    container_name: dmt-webhook
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:8000:8000
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+
 
 volumes:
   pgdata:

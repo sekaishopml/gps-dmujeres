@@ -48,5 +48,14 @@
 
     <!-- Guardar solo atributos esenciales en la base de datos para optimizar espacio (batteryLevel, alarm, ignition, motion) -->
     <entry key='processing.copyAttributes'>batteryLevel,alarm,ignition,motion</entry>
+    <!-- ============================================================ -->
+    <!-- Forwarding de datos en tiempo real hacia el nuevo backend     -->
+    <!-- ============================================================ -->
+    <entry key='forward.enable'>true</entry>
+    <entry key='forward.url'>http://webhook-receiver:8000/api/webhook/traccar</entry>
+    <entry key='forward.json'>true</entry>
+    <entry key='event.forward.enable'>true</entry>
+    <entry key='event.forward.url'>http://webhook-receiver:8000/api/webhook/eventos</entry>
+
 </properties>
 
