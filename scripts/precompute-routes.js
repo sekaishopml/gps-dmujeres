@@ -55,7 +55,7 @@ function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
  */
 async function getActiveDevices(pool) {
   const result = await pool.query(
-    "SELECT id, device_uid, name FROM tc_devices WHERE status = 'active'"
+    "SELECT id, uniqueid, name FROM tc_devices WHERE status IS NOT NULL"
   );
   return result.rows;
 }
@@ -65,12 +65,12 @@ async function getActiveDevices(pool) {
  */
 async function generateRouteGeojson(pool, deviceId, dateStr) {
   const query = `
-    SELECT latitude, longitude, speed, time, altitude, course, accuracy, attributes
+    SELECT latitude, longitude, speed, servertime, altitude, course, accuracy, attributes
     FROM tc_positions
-    WHERE device_id = $1
-      AND time >= $2::timestamptz
-      AND time <= $3::timestamptz
-    ORDER BY time ASC
+    WHERE deviceid = $1
+      AND servertime >= $2::timestamptz
+      AND servertime <= $3::timestamptz
+    ORDER BY servertime ASC
   `;
 
   const fromDate = `${dateStr}T00:00:00`;
@@ -119,7 +119,7 @@ async function generateRouteGeojson(pool, deviceId, dateStr) {
   }
 
   const avg_speed = valid_speeds_count > 0 ? speed_sum / valid_speeds_count : 0.0;
-  const duration_min = (new Date(last_point.time) - new Date(first_point.time)) / 60000.0;
+  const duration_min = (new Date(last_point.servertime) - new Date(first_point.servertime)) / 60000.0;
 
   return {
     type: 'FeatureCollection',
@@ -131,15 +131,15 @@ async function generateRouteGeojson(pool, deviceId, dateStr) {
           coordinates: coordinates,
         },
         properties: {
-          device_id: deviceId,
+          deviceid: deviceId,
           date: dateStr,
           total_points: total_points,
           distance_km: parseFloat(total_distance.toFixed(2)),
           duration_min: parseFloat(duration_min.toFixed(1)),
           avg_speed_kmh: parseFloat(avg_speed.toFixed(2)),
           max_speed_kmh: parseFloat(max_speed.toFixed(2)),
-          start_time: first_point.time,
-          end_time: last_point.time,
+          start_time: first_point.servertime,
+          end_time: last_point.servertime,
           start_lat: parseFloat(first_point.latitude),
           start_lon: parseFloat(first_point.longitude),
           end_lat: parseFloat(last_point.latitude),

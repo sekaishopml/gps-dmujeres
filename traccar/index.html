@@ -44,5 +44,44 @@
     <noscript>Enable JavaScript to use <a href="https://www.traccar.org/">Traccar GPS Tracking System</a>.</noscript>
     <div id="root" class="root"></div>
     <div class="loader"></div>
-  </body>
+    <!-- Route Web Worker - procesamiento en segundo plano -->
+  <script>
+    // Crear Web Worker para parseo de rutas sin bloquear UI
+    var routeWorker = null;
+    try {
+      routeWorker = new Worker("/route-worker.js");
+      routeWorker.onmessage = function(e) {
+        var msg = e.data;
+        if (msg.type === "parsed" && msg.count > 0) {
+          console.log("[RouteWorker] Parsed " + msg.count + " points in background");
+        }
+      };
+      routeWorker.onerror = function(e) {
+        console.warn("[RouteWorker] Error:", e.message);
+      };
+    } catch(e) {
+      console.warn("[RouteWorker] Worker not available:", e.message);
+    }
+
+    // Interceptar fetch para /api/positions y /api/positions/latest
+    var origFetch = window.fetch;
+    window.fetch = function() {
+      var url = arguments[0];
+      if (typeof url === "string" && (url.indexOf("/api/positions") >= 0 || url.indexOf("/api/v2/positions") >= 0)) {
+        console.log("[RouteWorker] Intercepted positions fetch:", url);
+        return origFetch.apply(this, arguments).then(function(response) {
+          if (response.ok && routeWorker) {
+            var cloned = response.clone();
+            cloned.json().then(function(data) {
+              routeWorker.postMessage({ type: "parse", data: data });
+            }).catch(function() {});
+          }
+          return response;
+        });
+      }
+      return origFetch.apply(this, arguments);
+    };
+  </script>
+
+</body>
 </html>

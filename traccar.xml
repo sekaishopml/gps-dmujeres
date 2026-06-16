@@ -5,7 +5,7 @@
 
     <!-- Base de Datos PostgreSQL -->
     <entry key='database.driver'>org.postgresql.Driver</entry>
-    <entry key='database.url'>jdbc:postgresql://timescaledb:5432/dmtracker</entry>
+    <entry key='database.url'>jdbc:postgresql://pgbouncer:6432/dmtracker</entry>
     <entry key='database.user'>dmt_admin</entry>
     <entry key='database.password'>dmt_prod_secure_2026_change_me</entry>
 
