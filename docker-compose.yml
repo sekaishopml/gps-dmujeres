@@ -213,7 +213,7 @@ services:
       context: ./scripts
       dockerfile: Dockerfile.cron
     container_name: dmt-route-cron
-    restart: unless-stopped
+    restart: "no"
     environment:
       DATABASE_URL: postgresql://dmt_admin:${POSTGRES_PASSWORD:-dmt_prod_secure_2026_change_me}@timescaledb:5432/dmtracker
       REDIS_URL: redis://redis:6379
