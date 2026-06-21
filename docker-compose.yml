@@ -79,7 +79,7 @@ services:
     ports:
       - "5055:5055"
       - "5055:5055/udp"
-      - "127.0.0.1:8082:8082"
+      - "8082:8082"
     environment:
       - JAVA_TOOL_OPTIONS=-Xms1g -Xmx4g -XX:+UseG1GC -XX:MaxGCPauseMillis=200
     healthcheck:
