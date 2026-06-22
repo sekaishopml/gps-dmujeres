@@ -1,0 +1,19 @@
+[Unit]
+Description=D-MUJERES-TRACCAR GPS Ingestor (OsmAnd)
+After=network.target postgresql.service redis-server.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/gps-dmujeres/ingestor
+ExecStart=/usr/bin/node src/index.js
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=PORT=5055
+Environment=DATABASE_URL=postgresql://dmt_admin:dmt_prod_secure_2026_change_me@localhost:5432/dmtracker
+Environment=LOG_LEVEL=info
+
+[Install]
+WantedBy=multi-user.target
