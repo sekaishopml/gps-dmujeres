@@ -80,11 +80,11 @@ app.all("/", async (req, res) => {
     // Buscar o crear dispositivo por UID
     for (const pos of positions) {
       const uid = String(pos.device_id);
-      const result = await pool.query("SELECT id FROM tc_devices WHERE device_uid = $1", [uid]);
+      const result = await pool.query("SELECT id FROM tc_devices WHERE uniqueid = $1", [uid]);
       let deviceDbId;
       if (result.rows.length === 0) {
         const insert = await pool.query(
-          "INSERT INTO tc_devices (device_uid, name) VALUES ($1, $2) ON CONFLICT (device_uid) DO UPDATE SET name=EXCLUDED.name RETURNING id",
+          "INSERT INTO tc_devices (uniqueid, name) VALUES ($1, $2) ON CONFLICT (uniqueid) DO UPDATE SET name=EXCLUDED.name RETURNING id",
           [uid, `Dispositivo ${uid}`]
         );
         deviceDbId = insert.rows[0].id;

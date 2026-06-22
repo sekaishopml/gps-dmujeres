@@ -14,6 +14,9 @@ venv/
 pgdata/
 redisdata/
 
+# opencode local config
+.opencode/
+
 # Build
 frontend/dist/
 *.egg-info/

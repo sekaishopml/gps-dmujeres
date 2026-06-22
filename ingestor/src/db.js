@@ -33,11 +33,13 @@ export async function insertPosition(position) {
   } = position;
 
   const query = `
-    INSERT INTO tc_positions (time, device_id, latitude, longitude, altitude, speed, course, accuracy, attributes)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    INSERT INTO tc_positions (servertime, devicetime, fixtime, deviceid, latitude, longitude, altitude, speed, course, accuracy, attributes, protocol, valid)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
   `;
 
   const values = [
+    time,
+    time,
     time,
     device_id,
     latitude,
@@ -47,6 +49,8 @@ export async function insertPosition(position) {
     course,
     accuracy,
     JSON.stringify(attributes),
+    'osmand',
+    true,
   ];
 
   try {
@@ -71,9 +75,11 @@ export async function insertBatch(positions) {
 
   for (const pos of positions) {
     values.push(
-      `($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5}, $${paramIndex + 6}, $${paramIndex + 7}, $${paramIndex + 8})`
+      `($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5}, $${paramIndex + 6}, $${paramIndex + 7}, $${paramIndex + 8}, $${paramIndex + 9}, $${paramIndex + 10}, $${paramIndex + 11}, $${paramIndex + 12})`
     );
     params.push(
+      pos.time,
+      pos.time,
       pos.time,
       pos.device_id,
       pos.latitude,
@@ -82,12 +88,14 @@ export async function insertBatch(positions) {
       pos.speed || 0,
       pos.course || 0,
       pos.accuracy || 0,
-      JSON.stringify(pos.attributes || {})
+      JSON.stringify(pos.attributes || {}),
+      'osmand',
+      true
     );
-    paramIndex += 9;
+    paramIndex += 13;
   }
 
-  const query = `INSERT INTO tc_positions (time, device_id, latitude, longitude, altitude, speed, course, accuracy, attributes) VALUES ${values.join(", ")}`;
+  const query = `INSERT INTO tc_positions (servertime, devicetime, fixtime, deviceid, latitude, longitude, altitude, speed, course, accuracy, attributes, protocol, valid) VALUES ${values.join(", ")}`;
 
   try {
     await pool.query(query, params);

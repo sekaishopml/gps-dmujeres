@@ -59,16 +59,35 @@ services:
       - ./traccar/basemaps.js:/opt/traccar/web/basemaps.js:ro
       - ./traccar/sw.js:/opt/traccar/web/sw.js:ro
     ports:
-      - "5055:5055"
-      - "5055:5055/udp"
       - "8082:8082"
     environment:
-      - JAVA_TOOL_OPTIONS=-Xms1g -Xmx4g -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+      - JAVA_TOOL_OPTIONS=-Xms1g -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8082/"]
       interval: 30s
       timeout: 5s
+      start_period: 15s
       retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  ingestor:
+    build:
+      context: ./ingestor
+      dockerfile: Dockerfile
+    container_name: dmt-ingestor
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5055:5055"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-dmt_admin}:${POSTGRES_PASSWORD:-dmt_secure_pass_2026}@timescaledb:5432/${POSTGRES_DB:-dmtracker}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      timescaledb:
+        condition: service_healthy
     logging:
       driver: "json-file"
       options:
