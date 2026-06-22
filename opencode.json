@@ -3,14 +3,60 @@
   "mcp": {
     "redis": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-redis"
-      ],
+      "command": ["npx", "-y", "@modelcontextprotocol/server-redis"],
       "env": {
         "REDIS_URL": "redis://localhost:6379"
       },
+      "enabled": true
+    },
+    "postgres": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://dmt_admin:dmt_prod_secure_2026_change_me@localhost:5433/dmtracker"
+      ],
+      "enabled": true
+    },
+    "playwright": {
+      "type": "local",
+      "description": "Automatización de navegador web: navegar, hacer clic, capturar errores de consola, tomar screenshots",
+      "command": ["npx", "-y", "@playwright/mcp@latest"],
+      "enabled": true
+    },
+    "github": {
+      "type": "local",
+      "description": "Gestión de repo: PRs, issues, código, commits",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "{env:GITHUB_TOKEN}"
+      },
+      "enabled": true
+    },
+    "sequential-thinking": {
+      "type": "local",
+      "description": "Razonamiento paso a paso para resolver problemas complejos",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "enabled": true
+    },
+    "filesystem": {
+      "type": "local",
+      "description": "Operaciones avanzadas de archivos: leer, escribir, buscar, metadata",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/home/gps-dmujeres"
+      ],
       "enabled": true
     }
   }

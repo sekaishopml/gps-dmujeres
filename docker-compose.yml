@@ -84,7 +84,7 @@ services:
     ports:
       - "127.0.0.1:8085:8085"
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-dmt_admin}:${POSTGRES_PASSWORD:-dmt_secure_pass_2026}@pgbouncer:6432/${POSTGRES_DB:-dmtracker}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-dmt_admin}:${POSTGRES_PASSWORD:-dmt_secure_pass_2026}@timescaledb:5432/${POSTGRES_DB:-dmtracker}
       LOG_FILE_PATH: /opt/traccar/logs/tracker-server.log
     volumes:
       - ./traccar/logs:/opt/traccar/logs:ro
@@ -135,31 +135,6 @@ services:
       options:
         max-size: 10m
         max-file: 3
-
-  pgbouncer:
-    image: pgbouncer/pgbouncer:latest
-    container_name: dmt-pgbouncer
-    restart: unless-stopped
-    environment:
-      DATABASES_USER: dmt_admin
-      DATABASES_PASSWORD: ${POSTGRES_PASSWORD:-dmt_secure_pass_2026}
-      DATABASES_HOST: timescaledb
-      DATABASES_PORT: "5432"
-      DATABASES_DATABASE: dmtracker
-      PGBOUNCER_POOL_MODE: transaction
-      PGBOUNCER_DEFAULT_POOL_SIZE: "25"
-      PGBOUNCER_MAX_CLIENT_CONN: "200"
-      PGBOUNCER_SERVER_RESET_QUERY: "DISCARD ALL"
-    ports:
-      - "127.0.0.1:6432:6432"
-    depends_on:
-      timescaledb:
-        condition: service_healthy
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   route-cron:
     build:

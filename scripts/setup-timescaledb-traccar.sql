@@ -1,6 +1,11 @@
--- Habilitar extensión TimescaleDB y PostGIS
+-- Habilitar extensión TimescaleDB y PostGIS (si está disponible)
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
-CREATE EXTENSION IF NOT EXISTS postgis CASCADE;
+DO $$ BEGIN
+    CREATE EXTENSION IF NOT EXISTS postgis CASCADE;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE NOTICE 'PostGIS no disponible, se omite. Funcionalidad geoespacial limitada.';
+END $$;
 
 -- Procedimiento para convertir las tablas en hypertables después de que Liquibase las cree
 CREATE OR REPLACE FUNCTION convert_to_hypertables() RETURNS void AS $$
