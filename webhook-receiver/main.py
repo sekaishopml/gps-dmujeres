@@ -33,7 +33,7 @@ SESSION_CACHE_TTL = 300
 async def get_redis() -> redis.Redis:
     global redis_client
     if redis_client is None:
-        redis_client = redis.from_url("redis://redis:6379/0", decode_responses=True)
+        redis_client = redis.from_url("redis://localhost:6379/0", decode_responses=True)
     return redis_client
 
 
@@ -43,7 +43,7 @@ async def get_db() -> asyncpg.Pool:
         db_pool = await asyncpg.create_pool(
             user="dmt_admin",
             password="dmt_prod_secure_2026_change_me",
-            host="timescaledb",
+            host="localhost",
             port=5432,
             database="dmtracker",
             min_size=5,
