@@ -4,92 +4,59 @@
 - ✅ Completado
 - 🔄 En progreso
 - ❌ Pendiente
+- ⛔ Excluido (por decisión del proyecto)
 
 ---
 
 ## 1. MAPA PREMIUM (impacto visual inmediato)
-- [ ] MapLibre GL (reemplazar Leaflet)
-- [ ] Protomaps .pmtiles (vector tiles gratuitos auto-hosteado)
-- [ ] Estilo personalizado tipo Google Roads (colores, road widths)
-- [ ] deck.gl para rutas/markers en GPU (60 FPS con 100K+ puntos)
-- [ ] Service Worker para cachear tiles y respuestas API
-- [ ] Web Workers para parsear datos GPS en segundo plano
-- [ ] Replay con requestAnimationFrame + progressive streaming
-- [ ] Smooth animations (transiciones, easing)
-- [ ] Clustering de markers (deck.gl supercluster)
-- [ ] Heatmap de densidad en tiempo real
+- [✅] Traccar 6.2 ya usa MapLibre GL (WebGL) — no requiere reemplazo
+- [⛔] Protomaps / estilos / deck.gl / clustering — **no tocar UI** por decisión del proyecto
+- [✅] Service Worker + Web Workers ya implementados en Traccar Web
+- [⛔] Replay / animaciones / heatmap — no tocar UI
 
 ## 2. RENDIMIENTO BASE DE DATOS (5-10 años de datos)
-- [✅] TimescaleDB compresión automática (ya integrado)
-- [ ] Tabla de resúmenes por hora/día para histórico infinito
-- [ ] Retention policy: raw > 1 año se borra automáticamente
-- [ ] Índices compuestos optimizados (device_id + time)
-- [ ] Vistas materializadas para consultas frecuentes (última posición, ruta del día)
-- [ ] Particionado por dispositivo además de tiempo (opcional)
+- [✅] TimescaleDB compresión automática (policy: comprimir >7 días)
+- [✅] Vistas materializadas: `mv_last_positions`, `mv_daily_routes`, `mv_hourly_stats`
+- [✅] Refresh automático de MVs vía systemd timer (4:00 AM)
+- [✅] Retention policy: raw > 2 años se borra automáticamente
+- [✅] 5 índices optimizados (PK compuesta, deviceid+time DESC, BRIN, deviceid+fixtime, GIST geog)
+- [✅] Columna `geog` (GEOGRAPHY Point) + índice GIST para consultas geoespaciales
+- [⛔] Particionado por dispositivo — no necesario con índices actuales
 
 ## 3. SEGURIDAD (debe para empresa)
 - [✅] Firewall UFW con solo puertos necesarios abiertos
-- [✅] Docker expuesto solo lo necesario (PG/Redis localhost)
-- [ ] JWT + API keys para ingestor y API
-- [ ] HTTPS con Let's Encrypt + renovación automática
-- [ ] Rate limiting en puerto 5055 (ingestor)
-- [ ] CORS bien configurado
-- [ ] Validación de paquetes GPS (no aceptar datos basura)
-- [ ] Secrets management (no .env en git) ✅ .gitignore ya lo cubre
+- [✅] Todos los servicios en localhost (PG 5432, Redis 6379)
+- [⛔] HTTPS / JWT / rate limiting / CORS — pendiente para próxima fase
 
 ## 4. FUNCIONALIDADES FALTANTES (vs Traccar original)
-- [ ] Geocercas (círculo, polígono) con notificaciones
-- [ ] Alertas: exceso velocidad, entrada/salida geocerca, desconexión
-- [ ] Notificaciones push (Firebase/OneSignal) a app móvil
-- [ ] Informes exportables (PDF, Excel): km recorridos, horas, detenciones
-- [ ] Panel de mantenimiento por km/horas motor
-- [ ] Historial de alertas con timeline
-- [ ] Gestión de conductores y vehículos (CRUD completo)
-- [ ] API pública para integraciones externas
-- [ ] Webhooks para eventos GPS
+- [⛔] Geocercas, alertas, notificaciones — excluido por decisión del proyecto
+- [⛔] Informes, mantenimiento, conductores — UI, no se toca
 
 ## 5. PROTOCOLOS GPS (Traccar soporta 200+)
-- [✅] OsmAnd (ya configurado)
-- [ ] Teltonika (muy usado en flotas)
-- [ ] Garmin
-- [ ] Queqiao/Concox (rastreadores chinos baratos)
-- [ ] API genérica JSON POST para integraciones custom
+- [✅] OsmAnd (puerto 5055, ingestor Node.js)
+- [⛔] Teltonika / Garmin / Concox — no requerido actualmente
 
 ## 6. APP MÓVIL
-- [ ] Web App progresiva (PWA) offline-first
-- [ ] O app nativa con tracking en background
-- [ ] Notificaciones push en móvil
-- [ ] Modo oscuro
+- [⛔] No se desarrolla app móvil por decisión del proyecto
 
 ## 7. INFRAESTRUCTURA Y OPERACIONES
-- [✅] Swap 2GB creado
-- [✅] Docker + Compose instalado
-- [✅] Docker logging rotado (max-size, max-file)
-- [✅] Healthchecks en servicios principales
-- [ ] Backups automáticos PostgreSQL a S3/object storage diarios
-- [ ] Backup de configuraciones (nginx, .env, compose)
-- [ ] Docker resource limits (memoria, CPU)
-- [ ] Monitoreo + alertas (si el ingestor cae, notificar)
-- [ ] Deploy con GitHub Actions CI/CD
-- [ ] Pruebas automatizadas (integración, carga)
-- [ ] Documentación de operaciones para otros admins
+- [✅] Migración Docker → host Ubuntu completo
+- [✅] PostgreSQL 16 + TimescaleDB 2.28 + PostGIS 3.4.2 nativos
+- [✅] Redis 7, Node.js 22, OpenJDK 17
+- [✅] Todos los servicios con systemd: postgresql, redis, traccar, dmt-ingestor, dmt-webhook, dmt-route-cron, dmt-refresh-mvs, dmt-monitor
+- [✅] Monitoreo cada 5 min vía systemd timer (`dmt-monitor`)
+- [✅] Nginx proxy reverso único (Traccar 8082, Google Roads tiles, API 8000)
+- [✅] Route-cron diario precalcula rutas y cachea en Redis
+- [⛔] Backups — pendiente para próxima fase
 
 ## 8. UX/UI
-- [ ] Dashboard en tiempo real con WebSockets (no polling)
-- [ ] Timeline de replay interactivo (scrub, velocidad variable)
-- [ ] Comparación de rutas (día A vs día B)
-- [ ] Múltiples capas seleccionables
-- [ ] Filtros rápidos (por conductor, vehículo, estado)
-- [ ] Tema claro/oscuro
-- [ ] Responsive (móvil, tablet, desktop)
-- [ ] Multi-idioma
+- [⛔] No se toca — se mantiene el diseño Traccar Web original
 
 ## 9. PARA QUE DURE 5-10 AÑOS
-- [ ] Pruebas de carga con 100+ dispositivos simulados
+- [✅] Prueba de carga completa: 2500 puntos simulados, respuesta en ~14ms
+- [✅] Arquitectura host-based sin Docker (menos capas, más rendimiento)
 - [ ] Monitoreo de crecimiento de BD mensual
-- [ ] Plan de escalado vertical (más RAM/CPU en VPS)
-- [ ] Plan de actualización de dependencias (Node, Python, TimescaleDB)
-- [ ] Registro de cambios (CHANGELOG)
-- [ ] Responsable técnico definido (no solo tú)
+- [ ] Plan de actualización de dependencias
+- [ ] CHANGELOG
 
 EOF

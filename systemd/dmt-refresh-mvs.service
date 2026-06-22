@@ -1,0 +1,9 @@
+[Unit]
+Description=D-MUJERES-TRACCAR Refresh Materialized Views
+After=postgresql.service
+
+[Service]
+Type=oneshot
+ExecStart=/home/gps-dmujeres/scripts/refresh-mvs.sh
+User=root
+Group=root

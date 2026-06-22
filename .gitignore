@@ -40,3 +40,4 @@ nginx/ssl/
 certbot_www/
 certbot_conf/
 traccar/ecuador.pmtiles
+# Scripts

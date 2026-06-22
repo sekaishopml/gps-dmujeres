@@ -1,0 +1,9 @@
+[Unit]
+Description=D-MUJERES-TRACCAR Service Monitor
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/gps-dmujeres/scripts/dmt-monitor.sh
+User=root
+Group=root
