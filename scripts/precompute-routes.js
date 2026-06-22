@@ -14,9 +14,9 @@ import { createClient } from 'redis';
 // ============================================
 const DATABASE_URL =
   process.env.DATABASE_URL ||
-  'postgresql://dmt_admin:dmt_secure_pass_2026@timescaledb:5432/dmtracker';
+  'postgresql://dmt_admin:dmt_prod_secure_2026_change_me@localhost:5432/dmtracker';
 
-const REDIS_URL = process.env.REDIS_URL || 'redis://redis:6379';
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 
 const CRON_HOUR = parseInt(process.env.CRON_HOUR || '3', 10);
 const DAYS_TO_PRECOMPUTE = parseInt(process.env.DAYS_TO_PRECOMPUTE || '1', 10);

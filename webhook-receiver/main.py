@@ -61,7 +61,7 @@ async def validate_session(jsessionid: str) -> bool:
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                "http://traccar:8082/api/devices",
+                "http://localhost:8082/api/devices",
                 cookies={"JSESSIONID": jsessionid},
                 timeout=3,
             )
@@ -301,7 +301,7 @@ async def login(request: Request):
     email = body.get("email", "")
     password = body.get("password", "")
     async with httpx.AsyncClient() as client:
-        resp = await client.post("http://traccar:8082/api/session", data={"email": email, "password": password}, timeout=5)
+        resp = await client.post("http://localhost:8082/api/session", data={"email": email, "password": password}, timeout=5)
     if resp.status_code != 200:
         return JSONResponse(content={"error": "Invalid credentials"}, status_code=401)
     jsessionid = resp.cookies.get("JSESSIONID")
@@ -430,7 +430,53 @@ async def get_route_compact(
 @app.get("/route-worker.js")
 async def serve_worker():
     from fastapi.responses import FileResponse
-    return FileResponse("/app/route-worker.js", media_type="application/javascript")
+    return FileResponse("/home/gps-dmujeres/webhook-receiver/route-worker.js", media_type="application/javascript")
+
+@app.get("/api/stats")
+async def get_stats():
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        total_devices = await conn.fetchval("SELECT count(*) FROM tc_devices")
+        total_positions = await conn.fetchval("SELECT count(*) FROM tc_positions")
+        active_today = await conn.fetchval("""
+            SELECT count(DISTINCT deviceid) FROM tc_positions
+            WHERE servertime >= CURRENT_DATE
+        """)
+        positions_24h = await conn.fetchval("""
+            SELECT count(*) FROM tc_positions
+            WHERE servertime >= now() - interval '24 hours'
+        """)
+        db_size = await conn.fetchval(
+            "SELECT pg_size_pretty(pg_database_size('dmtracker'))"
+        )
+        positions_size = await conn.fetchval(
+            "SELECT pg_size_pretty(sum(pg_total_relation_size(relid))) FROM pg_stat_user_tables WHERE relname = 'tc_positions'"
+        )
+        oldest_pos = await conn.fetchval("SELECT min(servertime) FROM tc_positions")
+        newest_pos = await conn.fetchval("SELECT max(servertime) FROM tc_positions")
+        bbox = await conn.fetchrow("""
+            SELECT
+                min(latitude) as min_lat, max(latitude) as max_lat,
+                min(longitude) as min_lon, max(longitude) as max_lon
+            FROM tc_positions
+        """)
+
+    return {
+        "total_devices": total_devices,
+        "total_positions": total_positions,
+        "active_devices_today": active_today,
+        "positions_last_24h": positions_24h,
+        "database_size": db_size,
+        "positions_storage": positions_size,
+        "oldest_position": str(oldest_pos) if oldest_pos else None,
+        "newest_position": str(newest_pos) if newest_pos else None,
+        "bounding_box": {
+            "min_latitude": float(bbox["min_lat"]) if bbox["min_lat"] else None,
+            "max_latitude": float(bbox["max_lat"]) if bbox["max_lat"] else None,
+            "min_longitude": float(bbox["min_lon"]) if bbox["min_lon"] else None,
+            "max_longitude": float(bbox["max_lon"]) if bbox["max_lon"] else None,
+        } if bbox else None,
+    }
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 import asyncpg
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://dmt_admin:dmt_prod_secure_2026_change_me@timescaledb:5432/dmtracker")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://dmt_admin:dmt_prod_secure_2026_change_me@localhost:5432/dmtracker")
 DEVICE_ID = 102  # Colaborador Simulado 2
 KML_PATH = os.getenv("KML_PATH", "/home/Dmujeres-traccar/data-test/positions.kml")
 

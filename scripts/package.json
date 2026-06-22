@@ -1,0 +1,10 @@
+{
+  "name": "dmt-route-cron",
+  "version": "1.0.0",
+  "description": "Pre-cálculo nocturno de rutas para D-MUJERES-TRACCAR",
+  "type": "module",
+  "dependencies": {
+    "pg": "^8.13.0",
+    "redis": "^4.7.0"
+  }
+}

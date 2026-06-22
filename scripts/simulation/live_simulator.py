@@ -8,7 +8,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 
 # TRACCAR OsmAnd Ingest Port inside the docker network
-INGEST_URL = "http://traccar:5055/"
+INGEST_URL = "http://localhost:5055/"
 
 CITIES = {
     "Guayaquil": {

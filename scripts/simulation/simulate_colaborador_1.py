@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timedelta
 import asyncpg
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://dmt_admin:dmt_prod_secure_2026_change_me@timescaledb:5432/dmtracker")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://dmt_admin:dmt_prod_secure_2026_change_me@localhost:5432/dmtracker")
 DEVICE_ID = 101 # Colaborador Simulado 1
 
 # Coordinates

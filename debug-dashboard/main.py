@@ -30,7 +30,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(na
 logger = logging.getLogger("dmt-debug")
 
 # Variables de Entorno
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://dmt_admin:dmt_prod_secure_2026_change_me@timescaledb:5432/dmtracker")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://dmt_admin:dmt_prod_secure_2026_change_me@localhost:5432/dmtracker")
 LOG_FILE_PATH = os.getenv("LOG_FILE_PATH", "/opt/traccar/logs/tracker-server.log")
 
 app = FastAPI(title="GPS D-MUJERES Debug Dashboard")
